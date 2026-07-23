@@ -11,12 +11,17 @@ from __future__ import annotations
 from merlin.ai.models.request import AIRequest
 from merlin.ai.models.response import AIResponse
 from merlin.ai.models.router import ModelRouter
+from merlin.ai.prompts.prompt_builder import PromptBuilder
 
 
 class AIService:
-    def __init__(self, router: ModelRouter) -> None:
+    def __init__(self, router: ModelRouter, prompt_builder: PromptBuilder) -> None:
         self._router = router
+        self._prompt_builder = prompt_builder
 
     async def ask(self, prompt: str) -> AIResponse:
-        request = AIRequest(prompt=prompt)
+        request = AIRequest(
+            prompt=prompt,
+            system_prompt=self._prompt_builder.build_system_prompt(),
+        )
         return await self._router.route(request)

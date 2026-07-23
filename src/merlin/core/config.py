@@ -44,6 +44,14 @@ class ModelsConfig(BaseModel):
     providers: dict[str, ProviderConfig]
 
 
+class PersonalityConfig(BaseModel):
+    name: str
+    tone: str
+    language: str
+    rules: list[str] = Field(default_factory=list)
+    base_prompt: str
+
+
 def load_settings(config_dir: Path = DEFAULT_CONFIG_DIR) -> Settings:
     """Carga config/settings.yaml."""
     data = _read_yaml(config_dir / "settings.yaml")
@@ -54,6 +62,12 @@ def load_models_config(config_dir: Path = DEFAULT_CONFIG_DIR) -> ModelsConfig:
     """Carga config/models.yaml."""
     data = _read_yaml(config_dir / "models.yaml")
     return ModelsConfig.model_validate(data)
+
+
+def load_personality(config_dir: Path = DEFAULT_CONFIG_DIR) -> PersonalityConfig:
+    """Carga config/personality.yaml."""
+    data = _read_yaml(config_dir / "personality.yaml")
+    return PersonalityConfig.model_validate(data)
 
 
 def _read_yaml(path: Path) -> dict:

@@ -12,13 +12,15 @@ from __future__ import annotations
 from merlin.ai.models.registry import ProviderRegistry
 from merlin.ai.models.router import ModelRouter
 from merlin.ai.providers.ollama import OllamaProvider
-from merlin.core.config import load_models_config, load_settings
+from merlin.ai.prompts.prompt_builder import PromptBuilder
+from merlin.core.config import load_models_config, load_personality, load_settings
 from merlin.services.ai_service import AIService
 
 
 def build_ai_service() -> AIService:
     settings = load_settings()
     models_config = load_models_config()
+    personality = load_personality()
 
     registry = ProviderRegistry()
 
@@ -36,4 +38,6 @@ def build_ai_service() -> AIService:
         default_model=settings.ai.default_model,
     )
 
-    return AIService(router=router)
+    prompt_builder = PromptBuilder(personality=personality)
+
+    return AIService(router=router, prompt_builder=prompt_builder)
