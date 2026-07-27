@@ -1,0 +1,3 @@
+db_path: "data/merlin_memory.db"
+max_history_messages: 20
+default_session_id: "default"

@@ -12,6 +12,7 @@ import yaml
 from pydantic import BaseModel, Field
 
 DEFAULT_CONFIG_DIR = Path(__file__).resolve().parents[3] / "config"
+PROJECT_ROOT = DEFAULT_CONFIG_DIR.parent
 
 
 class AppSettings(BaseModel):
@@ -52,6 +53,17 @@ class PersonalityConfig(BaseModel):
     base_prompt: str
 
 
+class MemoryConfig(BaseModel):
+    db_path: Path
+    max_history_messages: int = 20
+    default_session_id: str = "default"
+
+    def resolved_db_path(self) -> Path:
+        if self.db_path.is_absolute():
+            return self.db_path
+        return PROJECT_ROOT / self.db_path
+
+
 def load_settings(config_dir: Path = DEFAULT_CONFIG_DIR) -> Settings:
     """Carga config/settings.yaml."""
     data = _read_yaml(config_dir / "settings.yaml")
@@ -68,6 +80,12 @@ def load_personality(config_dir: Path = DEFAULT_CONFIG_DIR) -> PersonalityConfig
     """Carga config/personality.yaml."""
     data = _read_yaml(config_dir / "personality.yaml")
     return PersonalityConfig.model_validate(data)
+
+
+def load_memory_config(config_dir: Path = DEFAULT_CONFIG_DIR) -> MemoryConfig:
+    """Carga config/memory.yaml."""
+    data = _read_yaml(config_dir / "memory.yaml")
+    return MemoryConfig.model_validate(data)
 
 
 def _read_yaml(path: Path) -> dict:

@@ -28,25 +28,30 @@ class OllamaProvider(AIProvider):
             msg = "OllamaProvider requiere AIRequest.model (ningún default implícito)"
             raise ValueError(msg)
 
+        messages: list[dict[str, str]] = []
+        if request.system_prompt:
+            messages.append({"role": "system", "content": request.system_prompt})
+        for turn in request.history:
+            messages.append({"role": turn.role.value, "content": turn.content})
+        messages.append({"role": "user", "content": request.prompt})
+
         payload: dict[str, object] = {
             "model": request.model,
-            "prompt": request.prompt,
+            "messages": messages,
             "stream": False,
         }
-        if request.system_prompt:
-            payload["system"] = request.system_prompt
         if request.temperature is not None:
             payload["options"] = {"temperature": request.temperature}
 
         logger.debug("Ollama request -> model={} host={}", request.model, self._host)
 
         async with httpx.AsyncClient(timeout=self._timeout_seconds) as client:
-            resp = await client.post(f"{self._host}/api/generate", json=payload)
+            resp = await client.post(f"{self._host}/api/chat", json=payload)
             resp.raise_for_status()
             data = resp.json()
 
         return AIResponse(
-            text=data.get("response", ""),
+            text=data.get("message", {}).get("content", ""),
             model=request.model,
             provider=self.name,
         )
