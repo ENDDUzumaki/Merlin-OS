@@ -6,9 +6,11 @@ vive aquí. Ningún otro módulo debe hardcodear estos valores.
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import yaml
+from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 
 DEFAULT_CONFIG_DIR = Path(__file__).resolve().parents[3] / "config"
@@ -58,6 +60,12 @@ class MemoryConfig(BaseModel):
         return PROJECT_ROOT / self.db_path
 
 
+class TodoistConfig(BaseModel):
+    base_url: str
+    timeout_seconds: int = 30
+    default_list_limit: int = 20
+
+
 class RoutingRule(BaseModel):
     provider: str
     model: str
@@ -96,6 +104,21 @@ def load_routing_config(config_dir: Path = DEFAULT_CONFIG_DIR) -> RoutingConfig:
     """Carga config/routing.yaml."""
     data = _read_yaml(config_dir / "routing.yaml")
     return RoutingConfig.model_validate(data)
+
+
+def load_todoist_config(config_dir: Path = DEFAULT_CONFIG_DIR) -> TodoistConfig:
+    """Carga config/integrations/todoist.yaml."""
+    data = _read_yaml(config_dir / "integrations" / "todoist.yaml")
+    return TodoistConfig.model_validate(data)
+
+
+def load_secret(name: str) -> str | None:
+    """Lee un secreto del entorno, cargando .env de la raíz del proyecto si existe.
+
+    Los secretos (tokens, API keys) nunca viven en YAML versionado.
+    """
+    load_dotenv(PROJECT_ROOT / ".env", override=False)
+    return os.getenv(name)
 
 
 def _read_yaml(path: Path) -> dict:
