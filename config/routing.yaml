@@ -1,0 +1,14 @@
+default:
+  provider: ollama
+  model: glm4:latest
+
+tasks:
+  code:
+    provider: ollama
+    model: qwen2.5-coder:latest
+  lightweight:
+    provider: ollama
+    model: qwen3:4b
+  creative:
+    provider: ollama
+    model: gemma4:latest

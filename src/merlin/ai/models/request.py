@@ -28,4 +28,5 @@ class AIRequest:
     temperature: float | None = None
     system_prompt: str | None = None
     history: list[ConversationTurn] = field(default_factory=list)
+    task_type: str | None = None
     metadata: dict[str, str] = field(default_factory=dict)

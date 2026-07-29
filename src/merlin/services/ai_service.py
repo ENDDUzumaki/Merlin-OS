@@ -32,7 +32,12 @@ class AIService:
         self._memory_store = memory_store
         self._max_history_messages = max_history_messages
 
-    async def ask(self, prompt: str, session_id: str) -> AIResponse:
+    async def ask(
+        self,
+        prompt: str,
+        session_id: str,
+        task_type: str | None = None,
+    ) -> AIResponse:
         recent = await self._memory_store.get_recent(session_id, self._max_history_messages)
         history = [ConversationTurn(role=m.role, content=m.content) for m in recent]
 
@@ -40,6 +45,7 @@ class AIService:
             prompt=prompt,
             system_prompt=self._prompt_builder.build_system_prompt(),
             history=history,
+            task_type=task_type,
         )
         response = await self._router.route(request)
 

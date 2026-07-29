@@ -26,13 +26,16 @@ def main() -> None:
 def ask(
     prompt: str,
     session: str = typer.Option(None, help="ID de sesión de memoria. Por defecto: la de config."),
+    task: str = typer.Option(
+        None, "--task", help="Tipo de tarea para elegir modelo (ver config/routing.yaml)."
+    ),
 ) -> None:
     """Envía un prompt al modelo por defecto y muestra la respuesta."""
     ai_service = build_ai_service()
     session_id = session or default_session_id()
 
     with console.status("[bold cyan]Pensando..."):
-        response = asyncio.run(ai_service.ask(prompt, session_id=session_id))
+        response = asyncio.run(ai_service.ask(prompt, session_id=session_id, task_type=task))
 
     console.print(f"[bold green]{response.provider}/{response.model}:[/bold green]")
     console.print(response.text)

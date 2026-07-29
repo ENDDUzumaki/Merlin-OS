@@ -1,9 +1,9 @@
 """Selecciona el provider y modelo a usar para un AIRequest.
 
-Hoy la política es trivial (siempre el provider/modelo por defecto de
-settings.yaml). Este es el punto de extensión futuro para reglas de
-selección más ricas (coste, latencia, capacidad requerida, fallback entre
-providers) sin que el resto del sistema tenga que cambiar.
+La política de selección vive en config/routing.yaml (RoutingConfig), no en
+código: agregar un nuevo tipo de tarea es editar YAML, no tocar esta clase.
+Este sigue siendo el único punto de extensión futuro para reglas más ricas
+(coste, latencia, fallback entre providers).
 """
 
 from __future__ import annotations
@@ -13,25 +13,27 @@ from dataclasses import replace
 from merlin.ai.models.registry import ProviderRegistry
 from merlin.ai.models.request import AIRequest
 from merlin.ai.models.response import AIResponse
+from merlin.core.config import RoutingConfig
 
 
 class ModelRouter:
     def __init__(
         self,
         registry: ProviderRegistry,
-        default_provider: str,
-        default_model: str,
+        routing_config: RoutingConfig,
     ) -> None:
         self._registry = registry
-        self._default_provider = default_provider
-        self._default_model = default_model
+        self._routing_config = routing_config
 
     async def route(self, request: AIRequest) -> AIResponse:
-        provider = self._registry.get(self._default_provider)
-        resolved_request = (
-            request if request.model is not None else self._with_default_model(request)
-        )
-        return await provider.generate(resolved_request)
+        if request.model is not None:
+            provider = self._registry.get(self._routing_config.default.provider)
+            return await provider.generate(request)
 
-    def _with_default_model(self, request: AIRequest) -> AIRequest:
-        return replace(request, model=self._default_model)
+        rule = self._routing_config.default
+        if request.task_type is not None and request.task_type in self._routing_config.tasks:
+            rule = self._routing_config.tasks[request.task_type]
+
+        provider = self._registry.get(rule.provider)
+        resolved_request = replace(request, model=rule.model)
+        return await provider.generate(resolved_request)

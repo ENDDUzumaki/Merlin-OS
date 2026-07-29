@@ -1,7 +1,3 @@
 app:
   name: "Merlin OS"
   log_level: "INFO"
-
-ai:
-  default_provider: "ollama"
-  default_model: "glm4:latest"

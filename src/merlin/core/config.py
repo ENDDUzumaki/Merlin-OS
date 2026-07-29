@@ -20,14 +20,8 @@ class AppSettings(BaseModel):
     log_level: str = "INFO"
 
 
-class AISettings(BaseModel):
-    default_provider: str
-    default_model: str
-
-
 class Settings(BaseModel):
     app: AppSettings
-    ai: AISettings
 
 
 class ModelSpec(BaseModel):
@@ -64,6 +58,16 @@ class MemoryConfig(BaseModel):
         return PROJECT_ROOT / self.db_path
 
 
+class RoutingRule(BaseModel):
+    provider: str
+    model: str
+
+
+class RoutingConfig(BaseModel):
+    default: RoutingRule
+    tasks: dict[str, RoutingRule] = Field(default_factory=dict)
+
+
 def load_settings(config_dir: Path = DEFAULT_CONFIG_DIR) -> Settings:
     """Carga config/settings.yaml."""
     data = _read_yaml(config_dir / "settings.yaml")
@@ -86,6 +90,12 @@ def load_memory_config(config_dir: Path = DEFAULT_CONFIG_DIR) -> MemoryConfig:
     """Carga config/memory.yaml."""
     data = _read_yaml(config_dir / "memory.yaml")
     return MemoryConfig.model_validate(data)
+
+
+def load_routing_config(config_dir: Path = DEFAULT_CONFIG_DIR) -> RoutingConfig:
+    """Carga config/routing.yaml."""
+    data = _read_yaml(config_dir / "routing.yaml")
+    return RoutingConfig.model_validate(data)
 
 
 def _read_yaml(path: Path) -> dict:

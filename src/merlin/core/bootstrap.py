@@ -19,16 +19,16 @@ from merlin.core.config import (
     load_memory_config,
     load_models_config,
     load_personality,
-    load_settings,
+    load_routing_config,
 )
 from merlin.services.ai_service import AIService
 
 
 def build_ai_service() -> AIService:
-    settings = load_settings()
     models_config = load_models_config()
     personality = load_personality()
     memory_config = load_memory_config()
+    routing_config = load_routing_config()
 
     registry = ProviderRegistry()
 
@@ -40,11 +40,7 @@ def build_ai_service() -> AIService:
         )
     )
 
-    router = ModelRouter(
-        registry=registry,
-        default_provider=settings.ai.default_provider,
-        default_model=settings.ai.default_model,
-    )
+    router = ModelRouter(registry=registry, routing_config=routing_config)
 
     prompt_builder = PromptBuilder(personality=personality)
     memory_store: MemoryStore = SqliteMemoryStore(db_path=memory_config.resolved_db_path())

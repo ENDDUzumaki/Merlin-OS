@@ -8,7 +8,7 @@ from merlin.ai.models.request import AIRequest
 from merlin.ai.models.response import AIResponse
 from merlin.ai.models.router import ModelRouter
 from merlin.ai.prompts.prompt_builder import PromptBuilder
-from merlin.core.config import PersonalityConfig
+from merlin.core.config import PersonalityConfig, RoutingConfig, RoutingRule
 from merlin.services.ai_service import AIService
 from tests.unit.fakes import FakeMemoryStore
 
@@ -51,14 +51,15 @@ def _build_service(
     default_model: str = "glm4:latest",
     memory_store: FakeMemoryStore | None = None,
     max_history_messages: int = 20,
+    tasks: dict[str, RoutingRule] | None = None,
 ) -> AIService:
     registry = ProviderRegistry()
     registry.register(provider)
-    router = ModelRouter(
-        registry=registry,
-        default_provider=provider.name,
-        default_model=default_model,
+    routing_config = RoutingConfig(
+        default=RoutingRule(provider=provider.name, model=default_model),
+        tasks=tasks or {},
     )
+    router = ModelRouter(registry=registry, routing_config=routing_config)
     prompt_builder = PromptBuilder(personality=TEST_PERSONALITY)
     return AIService(
         router=router,
@@ -97,6 +98,45 @@ async def test_ai_service_populates_system_prompt_from_personality() -> None:
     assert system_prompt is not None
     assert "TestBot" in system_prompt
     assert "Nunca ejecutas acciones del sistema." in system_prompt
+
+
+async def test_router_uses_task_specific_model_when_task_type_matches() -> None:
+    provider = FakeProvider()
+    service = _build_service(
+        provider,
+        default_model="glm4:latest",
+        tasks={"code": RoutingRule(provider=provider.name, model="qwen2.5-coder:latest")},
+    )
+
+    response = await service.ask("Escribe una función", session_id=TEST_SESSION, task_type="code")
+
+    assert response.model == "qwen2.5-coder:latest"
+
+
+async def test_router_falls_back_to_default_when_task_type_unknown() -> None:
+    provider = FakeProvider()
+    service = _build_service(
+        provider,
+        default_model="glm4:latest",
+        tasks={"code": RoutingRule(provider=provider.name, model="qwen2.5-coder:latest")},
+    )
+
+    response = await service.ask("Hola", session_id=TEST_SESSION, task_type="tarea-inexistente")
+
+    assert response.model == "glm4:latest"
+
+
+async def test_router_falls_back_to_default_when_task_type_is_none() -> None:
+    provider = FakeProvider()
+    service = _build_service(
+        provider,
+        default_model="glm4:latest",
+        tasks={"code": RoutingRule(provider=provider.name, model="qwen2.5-coder:latest")},
+    )
+
+    response = await service.ask("Hola", session_id=TEST_SESSION)
+
+    assert response.model == "glm4:latest"
 
 
 async def test_ai_service_persists_user_and_assistant_turns() -> None:
