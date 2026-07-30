@@ -75,6 +75,7 @@ class IntentParamSpec(BaseModel):
 class IntentSpec(BaseModel):
     name: str
     description: str
+    read_only: bool = False
     params: list[IntentParamSpec] = Field(default_factory=list)
 
 

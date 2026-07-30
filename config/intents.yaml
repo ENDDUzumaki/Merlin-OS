@@ -6,6 +6,11 @@
 #
 # Añadir una intención requiere también registrar su handler en bootstrap.py;
 # si falta, el sistema falla al arrancar (fallo temprano y explícito).
+#
+# read_only: true marca intenciones que solo leen datos. No piden confirmación
+# al usuario, porque son idempotentes e inofensivas. Por seguridad el valor por
+# defecto es false: si no se declara, la intención se trata como escritura y
+# requiere confirmación.
 
 intents:
   - name: "todoist.add_task"
@@ -20,4 +25,5 @@ intents:
 
   - name: "todoist.list_tasks"
     description: "Listar las tareas pendientes"
+    read_only: true
     params: []

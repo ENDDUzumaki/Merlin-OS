@@ -50,3 +50,16 @@ def test_build_system_prompt_omits_rules_block_when_empty() -> None:
     result = builder.build_system_prompt()
 
     assert "Reglas:" not in result
+
+
+def test_real_personality_config_enforces_spanish_only() -> None:
+    """La config real debe llevar una regla explícita de idioma único.
+
+    GLM4 tiende a filtrar caracteres chinos; la regla mitiga ese sesgo.
+    """
+    from merlin.core.config import load_personality
+
+    prompt = PromptBuilder(personality=load_personality()).build_system_prompt()
+
+    assert "español" in prompt.lower()
+    assert "chino" in prompt.lower()

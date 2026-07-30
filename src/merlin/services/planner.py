@@ -57,6 +57,19 @@ class Planner:
         logger.debug("Planner ejecuta {} con {}", intent.name, intent.params)
         return await handler(intent.params)
 
+    def requires_confirmation(self, intent: Intent) -> bool:
+        """True si la intención modifica algo y debe confirmarse con el usuario.
+
+        Las intenciones de solo lectura son idempotentes e inofensivas: pedir
+        confirmación para ellas es fricción sin beneficio. El default es exigir
+        confirmación: una intención desconocida o sin declarar se trata como
+        escritura.
+        """
+        spec = self._intents_config.get(intent.name)
+        if spec is None:
+            return True
+        return not spec.read_only
+
     def describe(self, intent: Intent) -> str:
         """Descripción legible de lo que se va a ejecutar, para confirmar con el usuario."""
         spec = self._intents_config.get(intent.name)

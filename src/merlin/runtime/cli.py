@@ -72,10 +72,14 @@ def do(
         console.print(f"[bold red]Error:[/bold red] {exc}")
         raise typer.Exit(code=1) from exc
 
-    console.print(f"[bold yellow]Acción propuesta:[/bold yellow] {planner.describe(intent)}")
-    if not yes and not typer.confirm("¿Ejecutar?"):
-        console.print("[dim]Cancelado.[/dim]")
-        return
+    needs_confirmation = planner.requires_confirmation(intent)
+    if needs_confirmation:
+        console.print(f"[bold yellow]Acción propuesta:[/bold yellow] {planner.describe(intent)}")
+        if not yes and not typer.confirm("¿Ejecutar?"):
+            console.print("[dim]Cancelado.[/dim]")
+            return
+    else:
+        console.print(f"[dim]{planner.describe(intent)}[/dim]")
 
     try:
         result = asyncio.run(planner.execute(intent))

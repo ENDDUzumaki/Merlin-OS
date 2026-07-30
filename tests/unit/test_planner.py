@@ -21,7 +21,7 @@ CATALOG = IntentsConfig(
                 IntentParamSpec(name="due", description="Cuándo", required=False),
             ],
         ),
-        IntentSpec(name="todoist.list_tasks", description="Listar tareas"),
+        IntentSpec(name="todoist.list_tasks", description="Listar tareas", read_only=True),
     ]
 )
 
@@ -98,3 +98,22 @@ def test_describe_without_params_returns_only_description() -> None:
     planner = Planner(intents_config=CATALOG, handlers=_handlers([]))
 
     assert planner.describe(Intent(name="todoist.list_tasks")) == "Listar tareas"
+
+
+def test_write_intent_requires_confirmation() -> None:
+    planner = Planner(intents_config=CATALOG, handlers=_handlers([]))
+
+    assert planner.requires_confirmation(Intent(name="todoist.add_task")) is True
+
+
+def test_read_only_intent_does_not_require_confirmation() -> None:
+    planner = Planner(intents_config=CATALOG, handlers=_handlers([]))
+
+    assert planner.requires_confirmation(Intent(name="todoist.list_tasks")) is False
+
+
+def test_unknown_intent_requires_confirmation_by_default() -> None:
+    """Ante lo desconocido, el default seguro es exigir confirmación."""
+    planner = Planner(intents_config=CATALOG, handlers=_handlers([]))
+
+    assert planner.requires_confirmation(Intent(name="algo.desconocido")) is True
