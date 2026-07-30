@@ -1,0 +1,23 @@
+# Catálogo de intenciones accionables.
+#
+# Este archivo cumple DOS funciones:
+#   1. Allowlist: el Planner solo ejecuta intenciones listadas aquí.
+#   2. Fuente del prompt del clasificador de intenciones.
+#
+# Añadir una intención requiere también registrar su handler en bootstrap.py;
+# si falta, el sistema falla al arrancar (fallo temprano y explícito).
+
+intents:
+  - name: "todoist.add_task"
+    description: "Crear una tarea o recordatorio"
+    params:
+      - name: "content"
+        description: "Qué hay que hacer"
+        required: true
+      - name: "due"
+        description: "Cuándo, en lenguaje natural (ej: 'mañana', 'lunes 9am')"
+        required: false
+
+  - name: "todoist.list_tasks"
+    description: "Listar las tareas pendientes"
+    params: []

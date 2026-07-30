@@ -6,6 +6,9 @@ tasks:
   code:
     provider: ollama
     model: qwen2.5-coder:latest
+  intent:
+    provider: ollama
+    model: qwen2.5-coder:latest
   lightweight:
     provider: ollama
     model: qwen3:4b

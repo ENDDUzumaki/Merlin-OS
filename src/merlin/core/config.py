@@ -66,6 +66,29 @@ class TodoistConfig(BaseModel):
     default_list_limit: int = 20
 
 
+class IntentParamSpec(BaseModel):
+    name: str
+    description: str
+    required: bool = False
+
+
+class IntentSpec(BaseModel):
+    name: str
+    description: str
+    params: list[IntentParamSpec] = Field(default_factory=list)
+
+
+class IntentsConfig(BaseModel):
+    intents: list[IntentSpec] = Field(default_factory=list)
+
+    @property
+    def names(self) -> set[str]:
+        return {intent.name for intent in self.intents}
+
+    def get(self, name: str) -> IntentSpec | None:
+        return next((intent for intent in self.intents if intent.name == name), None)
+
+
 class RoutingRule(BaseModel):
     provider: str
     model: str
@@ -110,6 +133,12 @@ def load_todoist_config(config_dir: Path = DEFAULT_CONFIG_DIR) -> TodoistConfig:
     """Carga config/integrations/todoist.yaml."""
     data = _read_yaml(config_dir / "integrations" / "todoist.yaml")
     return TodoistConfig.model_validate(data)
+
+
+def load_intents_config(config_dir: Path = DEFAULT_CONFIG_DIR) -> IntentsConfig:
+    """Carga config/intents.yaml (allowlist de acciones ejecutables)."""
+    data = _read_yaml(config_dir / "intents.yaml")
+    return IntentsConfig.model_validate(data)
 
 
 def load_secret(name: str) -> str | None:
